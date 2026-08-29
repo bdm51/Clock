@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>Wall Clock - Ticking Quartz</title>
+<style>
+  * {
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #090a0d;
+    overflow: hidden;
+  }
+  body {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+  }
+
+  /* Case with stronger bevel and depth. width/height set via JS —
+     no aspect-ratio support on iOS 10. */
+  #case {
+    position: relative;
+    border-radius: 12%;
+    background:
+      -webkit-radial-gradient(20% 0%, circle, #4a4b50 0%, #1b1c20 40%, #101115 80%),
+      -webkit-linear-gradient(145deg, #323338, #111114 50%, #1d1e22);
+    background:
+      radial-gradient(circle at 20% 0%, #4a4b50 0%, #1b1c20 40%, #101115 80%),
+      linear-gradient(145deg, #323338, #111114 50%, #1d1e22);
+    box-shadow:
+      0 4vmin 8vmin rgba(0,0,0,0.9),
+      0 1vmin 2vmin rgba(0,0,0,0.6),
+      inset 0 0.6vmin 1.2vmin rgba(255,255,255,0.18),
+      inset 0 -0.8vmin 1.6vmin rgba(0,0,0,0.95);
+    padding: 3.5%;
+    -webkit-transform: rotateX(0deg) rotateY(0deg);
+    transform: rotateX(0deg) rotateY(0deg);
+  }
+
+  /* Dial with paper grain + radial shading */
+  #clock {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 9%;
+    background:
+      -webkit-radial-gradient(45% 35%, circle, #faf6e8 0%, #f1e8c7 55%, #dfd3a0 100%),
+      -webkit-repeating-linear-gradient(0deg,
+        rgba(255,255,255,0.03) 0px,
+        rgba(255,255,255,0.03) 1px,
+        rgba(0,0,0,0.02) 2px,
+        rgba(0,0,0,0.02) 3px);
+    background:
+      radial-gradient(circle at 45% 35%, #faf6e8 0%, #f1e8c7 55%, #dfd3a0 100%),
+      repeating-linear-gradient(0deg,
+        rgba(255,255,255,0.03) 0px,
+        rgba(255,255,255,0.03) 1px,
+        rgba(0,0,0,0.02) 2px,
+        rgba(0,0,0,0.02) 3px);
+    box-shadow:
+      inset 0 0 3vmin rgba(0,0,0,0.35),
+      inset 0 1.2vmin 2.4vmin rgba(0,0,0,0.25);
+    overflow: hidden;
+  }
+
+  /* Inner lip where glass meets case. `inset: 1.5%` -> explicit sides
+     (iOS 10 doesn't support the inset shorthand). */
+  #clock::before {
+    content: '';
+    position: absolute;
+    top: 1.5%; right: 1.5%; bottom: 1.5%; left: 1.5%;
+    border-radius: 8%;
+    border: 0.25vmin solid rgba(0,0,0,0.35);
+    box-shadow:
+      inset 0 0.4vmin 0.8vmin rgba(255,255,255,0.25),
+      0 0.4vmin 0.8vmin rgba(0,0,0,0.35);
+    pointer-events: none;
+  }
+
+  /* Glass with curved reflection and vignette. `mix-blend-mode: screen`
+     removed (unsupported on iOS 10) — opacity is tuned up slightly on
+     each layer to compensate for the lost blending. */
+  #glass {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    border-radius: 9%;
+    background:
+      -webkit-radial-gradient(50% 18%, circle, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.1) 40%, transparent 70%),
+      -webkit-radial-gradient(10% 0%, circle, rgba(255,255,255,0.2) 0%, transparent 55%),
+      -webkit-radial-gradient(90% 100%, circle, rgba(0,0,0,0.28) 0%, transparent 60%),
+      -webkit-linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 30%, transparent 60%, rgba(255,255,255,0.06) 100%);
+    background:
+      radial-gradient(circle at 50% 18%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.1) 40%, transparent 70%),
+      radial-gradient(circle at 10% 0%, rgba(255,255,255,0.2) 0%, transparent 55%),
+      radial-gradient(circle at 90% 100%, rgba(0,0,0,0.28) 0%, transparent 60%),
+      linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.03) 30%, transparent 60%, rgba(255,255,255,0.06) 100%);
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  /* Subtle vignette on dial edges */
+  #clock::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    border-radius: 9%;
+    background: -webkit-radial-gradient(50% 50%, circle, transparent 60%, rgba(0,0,0,0.25) 100%);
+    background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(0,0,0,0.25) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Square stage sized to dial height, set via JS (no aspect-ratio) */
+  #hands-stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+
+  .hand {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform-origin: 50% 100%;
+    transform-origin: 50% 100%;
+  }
+
+  /* Tapered metallic hour hand */
+  #hour {
+    width: 3%;
+    height: 26%;
+    margin-left: -1.5%;
+    margin-top: -26%;
+    background:
+      -webkit-linear-gradient(0deg, #151515, #3a3a3a 40%, #707070 60%, #2a2a2a 100%);
+    background:
+      linear-gradient(90deg, #151515, #3a3a3a 40%, #707070 60%, #2a2a2a 100%);
+    -webkit-clip-path: polygon(50% 0%, 70% 20%, 70% 100%, 30% 100%, 30% 20%);
+    clip-path: polygon(50% 0%, 70% 20%, 70% 100%, 30% 100%, 30% 20%);
+    border-radius: 2vmin 2vmin 0 0;
+  }
+
+  /* Tapered metallic minute hand with stronger highlight */
+  #minute {
+    width: 2.4%;
+    height: 36%;
+    margin-left: -1.2%;
+    margin-top: -36%;
+    background:
+      -webkit-linear-gradient(0deg, #101010, #3c3c3c 35%, #8a8a8a 55%, #3c3c3c 75%, #151515 100%);
+    background:
+      linear-gradient(90deg, #101010, #3c3c3c 35%, #8a8a8a 55%, #3c3c3c 75%, #151515 100%);
+    -webkit-clip-path: polygon(50% 0%, 68% 18%, 68% 100%, 32% 100%, 32% 18%);
+    clip-path: polygon(50% 0%, 68% 18%, 68% 100%, 32% 100%, 32% 18%);
+    border-radius: 2vmin 2vmin 0 0;
+  }
+
+  /* Second hand with counterweight */
+  #second {
+    width: 0.6%;
+    height: 34%;
+    margin-left: -0.3%;
+    margin-top: -24%;
+    background: #b22222;
+    -webkit-transform-origin: 50% 72.7%;
+    transform-origin: 50% 72.7%;
+    z-index: 4;
+  }
+
+  #second-counterweight {
+    position: absolute;
+    bottom: -18%;
+    left: 50%;
+    width: 1.8vmin;
+    height: 1.8vmin;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+      -webkit-radial-gradient(30% 30%, circle, #ff6666, #7a1010);
+    background:
+      radial-gradient(circle at 30% 30%, #ff6666, #7a1010);
+    box-shadow: 0 0.25vmin 0.45vmin rgba(0,0,0,0.7);
+  }
+
+  .number {
+    position: absolute;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-weight: 900;
+    color: #1f1f1f;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    line-height: 1;
+    text-shadow: 0.1vmin 0.15vmin 0.1vmin rgba(255,255,255,0.4),
+                 -0.1vmin -0.1vmin 0.2vmin rgba(0,0,0,0.25);
+  }
+
+  .dot {
+    position: absolute;
+    background: #1f1f1f;
+    border-radius: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    box-shadow: 0.1vmin 0.15vmin 0.1vmin rgba(255,255,255,0.3);
+  }
+
+  /* Major and minor tick marks */
+  .radial-major,
+  .radial-minor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform-origin: 50% 0%;
+    transform-origin: 50% 0%;
+    -webkit-transform: translate(-50%, 0);
+    transform: translate(-50%, 0);
+    background: #1f1f1f;
+    opacity: 0.35;
+    box-shadow: 0.08vmin 0.12vmin 0.12vmin rgba(255,255,255,0.25);
+  }
+
+  .radial-major {
+    width: 0.35%;
+    height: 20%;
+  }
+
+  .radial-minor {
+    width: 0.18%;
+    height: 12%;
+    opacity: 0.25;
+  }
+
+  /* Sized via JS — no aspect-ratio */
+  #inner-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 0.2vmin dotted rgba(31,31,31,0.3);
+  }
+
+  /* Raised pivot cap. Sized via JS — no aspect-ratio */
+  #pivot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background:
+      -webkit-radial-gradient(35% 30%, circle, #999, #222);
+    background:
+      radial-gradient(circle at 35% 30%, #999, #222);
+    border-radius: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    box-shadow:
+      0 0.4vmin 0.7vmin rgba(0,0,0,0.9),
+      inset 0 0.12vmin 0.24vmin rgba(255,255,255,0.5);
+    z-index: 6;
+  }
+
+  /* Embossed brand logo */
+  #brand {
+    position: absolute;
+    top: 27%;
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    font-family: "Georgia", serif;
+    letter-spacing: 0.18em;
+    color: #222;
+    opacity: 0.55;
+    text-shadow:
+      0.08vmin 0.12vmin 0.12vmin rgba(255,255,255,0.5),
+      -0.08vmin -0.12vmin 0.18vmin rgba(0,0,0,0.35);
+  }
+</style>
+</head>
+<body>
+
+<div id="case">
+  <div id="clock">
+    <div id="brand">Jones</div>
+    <div id="inner-ring"></div>
+    <div id="hands-stage">
+      <div id="hour" class="hand"></div>
+      <div id="minute" class="hand"></div>
+      <div id="second" class="hand">
+        <div id="second-counterweight"></div>
+      </div>
+      <div id="pivot"></div>
+    </div>
+    <div id="glass"></div>
+  </div>
+</div>
+
+<script>
+var caseEl = document.getElementById('case');
+var clock = document.getElementById('clock');
+var handsStage = document.getElementById('hands-stage');
+var innerRing = document.getElementById('inner-ring');
+var pivot = document.getElementById('pivot');
+var brand = document.getElementById('brand');
+
+// --- Sizing (replaces aspect-ratio, clamp(), and container queries,
+// none of which exist on iOS 10 Safari) ---
+function layout() {
+  var vw = window.innerWidth;
+  var vh = window.innerHeight;
+
+  // #case: landscape 3:2, capped by both viewport width and height
+  var caseW = Math.min(vw * 0.90, vh * 0.90 * 1.5);
+  var caseH = caseW * (2 / 3);
+  if (caseH > vh * 0.90) {
+    caseH = vh * 0.90;
+    caseW = caseH * 1.5;
+  }
+  caseEl.style.width = caseW + 'px';
+  caseEl.style.height = caseH + 'px';
+
+  var clockRect = clock.getBoundingClientRect();
+  var dialH = clockRect.height;
+  var dialW = clockRect.width;
+
+  // hands-stage: square sized to dial height (was aspect-ratio:1/1 + height:100%)
+  handsStage.style.width = dialH + 'px';
+  handsStage.style.height = dialH + 'px';
+
+  // inner-ring: was width:11% + aspect-ratio:1
+  var ringSize = dialW * 0.11;
+  innerRing.style.width = ringSize + 'px';
+  innerRing.style.height = ringSize + 'px';
+
+  // pivot: was width/height:2.4% + aspect-ratio:1, based on stage (square)
+  var pivotSize = dialH * 0.024;
+  pivot.style.width = pivotSize + 'px';
+  pivot.style.height = pivotSize + 'px';
+
+  // font sizes: was clamp(min, preferred-vw/cqh, max)
+  var numSize = Math.max(19, Math.min(dialH * 0.24, 51));
+  var dots = clock.getElementsByClassName('dot');
+  var numbers = clock.getElementsByClassName('number');
+  for (var i = 0; i < numbers.length; i++) {
+    numbers[i].style.fontSize = numSize + 'px';
+  }
+  var dotSize = dialW * 0.013;
+  for (var j = 0; j < dots.length; j++) {
+    dots[j].style.width = dotSize + 'px';
+    dots[j].style.height = dotSize + 'px';
+  }
+  brand.style.fontSize = Math.max(9, Math.min(dialH * 0.09, 16)) + 'px';
+}
+
+var RX_NUM = 40, RY_NUM = 33;
+var RX_DOT = 40, RY_DOT = 33;
+
+function polar(rx, ry, angleDeg) {
+  var rad = (angleDeg - 90) * Math.PI / 180;
+  return {
+    x: 50 + rx * Math.cos(rad),
+    y: 50 + ry * Math.sin(rad)
+  };
+}
+
+// 12, 3, 6, 9 numerals
+var numerals = [
+  { label: '12', angle: 0 },
+  { label: '3',  angle: 90 },
+  { label: '6',  angle: 180 },
+  { label: '9',  angle: 270 }
+];
+for (var n = 0; n < numerals.length; n++) {
+  var pos = polar(RX_NUM, RY_NUM, numerals[n].angle);
+  var el = document.createElement('div');
+  el.className = 'number';
+  el.textContent = numerals[n].label;
+  el.style.left = pos.x + '%';
+  el.style.top = pos.y + '%';
+  clock.appendChild(el);
+}
+
+// Hour dots at the remaining eight positions
+var dotAngles = [30, 60, 120, 150, 210, 240, 300, 330];
+for (var d = 0; d < dotAngles.length; d++) {
+  var dpos = polar(RX_DOT, RY_DOT, dotAngles[d]);
+  var dot = document.createElement('div');
+  dot.className = 'dot';
+  dot.style.left = dpos.x + '%';
+  dot.style.top = dpos.y + '%';
+  clock.appendChild(dot);
+}
+
+// Major and minor tick marks — 60 total
+for (var i = 0; i < 60; i++) {
+  var angle = i * 6;
+  var isMajor = i % 5 === 0;
+  var line = document.createElement('div');
+  line.className = isMajor ? 'radial-major' : 'radial-minor';
+  var t = 'translate(-50%, 0) rotate(' + angle + 'deg)';
+  line.style.webkitTransform = t;
+  line.style.transform = t;
+  clock.appendChild(line);
+}
+
+var hourHand = document.getElementById('hour');
+var minuteHand = document.getElementById('minute');
+var secondHand = document.getElementById('second');
+
+function updateClock() {
+  var now = new Date();
+  var sec = now.getSeconds();
+  var min = now.getMinutes();
+  var hr  = now.getHours() % 12;
+
+  // Slight overshoot for quartz tick feel
+  var secBase = sec * 6;
+  var secOvershoot = secBase + (sec % 2 === 0 ? 0.8 : -0.4);
+
+  var secT = 'rotate(' + secOvershoot + 'deg)';
+  var minT = 'rotate(' + ((min * 6) + (sec * 0.1)) + 'deg)';
+  var hrT  = 'rotate(' + ((hr * 30) + (min * 0.5)) + 'deg)';
+
+  secondHand.style.webkitTransform = secT;
+  secondHand.style.transform = secT;
+  minuteHand.style.webkitTransform = minT;
+  minuteHand.style.transform = minT;
+  hourHand.style.webkitTransform = hrT;
+  hourHand.style.transform = hrT;
+}
+
+// Subtle parallax tilt for glass and case (works on iOS 10 without any
+// permission prompt — the iOS 13+ requestPermission() gate doesn't
+// exist yet on this OS version, so this can fire directly)
+(function setupParallax() {
+  var glassEl = document.getElementById('glass');
+
+  function applyTilt(beta, gamma) {
+    var maxTilt = 4;
+    var xTilt = (gamma / 45) * maxTilt;
+    var yTilt = (beta / 45) * maxTilt;
+
+    var caseT = 'rotateX(' + (yTilt * 0.25) + 'deg) rotateY(' + (xTilt * 0.25) + 'deg)';
+    var glassT = 'translate(-1%, -1%) rotateX(' + (yTilt * 0.6) + 'deg) rotateY(' + (xTilt * 0.6) + 'deg)';
+
+    caseEl.style.webkitTransform = caseT;
+    caseEl.style.transform = caseT;
+    glassEl.style.webkitTransform = glassT;
+    glassEl.style.transform = glassT;
+  }
+
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', function (event) {
+      var beta = event.beta || 0;
+      var gamma = event.gamma || 0;
+      applyTilt(beta, gamma);
+    }, true);
+  }
+})();
+
+layout();
+window.addEventListener('resize', layout);
+window.addEventListener('orientationchange', function () {
+  setTimeout(layout, 100);
+});
+
+updateClock();
+setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
