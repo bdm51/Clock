@@ -142,31 +142,31 @@
 
   /* Tapered metallic hour hand */
   #hour {
-    width: 3%;
+    width: 4.4%;
     height: 26%;
-    margin-left: -1.5%;
+    margin-left: -2.2%;
     margin-top: -26%;
     background:
-      -webkit-linear-gradient(0deg, #151515, #3a3a3a 40%, #707070 60%, #2a2a2a 100%);
+      -webkit-linear-gradient(0deg, #0d0d0d, #2c2c2c 40%, #5a5a5a 60%, #1a1a1a 100%);
     background:
-      linear-gradient(90deg, #151515, #3a3a3a 40%, #707070 60%, #2a2a2a 100%);
-    -webkit-clip-path: polygon(50% 0%, 70% 20%, 70% 100%, 30% 100%, 30% 20%);
-    clip-path: polygon(50% 0%, 70% 20%, 70% 100%, 30% 100%, 30% 20%);
+      linear-gradient(90deg, #0d0d0d, #2c2c2c 40%, #5a5a5a 60%, #1a1a1a 100%);
+    -webkit-clip-path: polygon(50% 0%, 74% 18%, 74% 100%, 26% 100%, 26% 18%);
+    clip-path: polygon(50% 0%, 74% 18%, 74% 100%, 26% 100%, 26% 18%);
     border-radius: 2vmin 2vmin 0 0;
   }
 
   /* Tapered metallic minute hand with stronger highlight */
   #minute {
-    width: 2.4%;
+    width: 3.4%;
     height: 36%;
-    margin-left: -1.2%;
+    margin-left: -1.7%;
     margin-top: -36%;
     background:
-      -webkit-linear-gradient(0deg, #101010, #3c3c3c 35%, #8a8a8a 55%, #3c3c3c 75%, #151515 100%);
+      -webkit-linear-gradient(0deg, #0a0a0a, #2e2e2e 35%, #666666 55%, #2e2e2e 75%, #101010 100%);
     background:
-      linear-gradient(90deg, #101010, #3c3c3c 35%, #8a8a8a 55%, #3c3c3c 75%, #151515 100%);
-    -webkit-clip-path: polygon(50% 0%, 68% 18%, 68% 100%, 32% 100%, 32% 18%);
-    clip-path: polygon(50% 0%, 68% 18%, 68% 100%, 32% 100%, 32% 18%);
+      linear-gradient(90deg, #0a0a0a, #2e2e2e 35%, #666666 55%, #2e2e2e 75%, #101010 100%);
+    -webkit-clip-path: polygon(50% 0%, 72% 16%, 72% 100%, 28% 100%, 28% 16%);
+    clip-path: polygon(50% 0%, 72% 16%, 72% 100%, 28% 100%, 28% 16%);
     border-radius: 2vmin 2vmin 0 0;
   }
 
@@ -230,8 +230,8 @@
     -webkit-transform: translate(-50%, 0);
     transform: translate(-50%, 0);
     background: #1f1f1f;
-    opacity: 0.35;
-    box-shadow: 0.08vmin 0.12vmin 0.12vmin rgba(255,255,255,0.25);
+    opacity: 0.15;
+    box-shadow: 0.08vmin 0.12vmin 0.12vmin rgba(255,255,255,0.15);
   }
 
   .radial-major {
@@ -242,7 +242,7 @@
   .radial-minor {
     width: 0.18%;
     height: 12%;
-    opacity: 0.25;
+    opacity: 0.09;
   }
 
   /* Sized via JS — no aspect-ratio */
@@ -253,7 +253,7 @@
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
     border-radius: 50%;
-    border: 0.2vmin dotted rgba(31,31,31,0.3);
+    border: 0.2vmin dotted rgba(31,31,31,0.15);
   }
 
   /* Raised pivot cap. Sized via JS — no aspect-ratio */
@@ -324,10 +324,10 @@ function layout() {
   var vh = window.innerHeight;
 
   // #case: landscape 3:2, capped by both viewport width and height
-  var caseW = Math.min(vw * 0.90, vh * 0.90 * 1.5);
+  var caseW = Math.min(vw, vh * 1.5);
   var caseH = caseW * (2 / 3);
-  if (caseH > vh * 0.90) {
-    caseH = vh * 0.90;
+  if (caseH > vh) {
+    caseH = vh;
     caseW = caseH * 1.5;
   }
   caseEl.style.width = caseW + 'px';
