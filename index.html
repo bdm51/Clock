@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <title>Wall Clock</title>
 <style>
   * {
@@ -21,33 +22,32 @@
     overflow: hidden;
   }
 
-  /* Each design gets its own full-screen layer, stacked on top of each
-     other. Only one is display:block at a time; the other is display:none.
-     Moving flex-centering here (off body) means toggling doesn't disturb
-     layout of whichever one becomes visible. */
+  /* Each design gets its own full-screen layer. Only one is displayed at
+     a time; toggling swaps which is display:block/flex. Flex-centering
+     lives here (not on body) so toggling doesn't disturb layout. */
   .view {
     position: absolute;
     top: 0; left: 0;
     width: 100%;
     height: 100%;
-    display: -webkit-flex;
     -webkit-align-items: center;
     align-items: center;
     -webkit-justify-content: center;
     justify-content: center;
   }
   #view-jones {
+    display: -webkit-flex;
     display: flex;
     background: #090a0d;
   }
-  #view-railway {
+  #view-karlsson {
     display: none;
-    background: #050505;
+    background: #14100c;
   }
 
-  /* Invisible tap target centered on the dial's pivot point, above both
-     designs, used to toggle between them. Sized generously (44px+) for a
-     reliable touch target on an old, less-precise digitizer. */
+  /* Invisible tap target over the pivot, above both designs, used to
+     toggle between them. Sized generously for a reliable touch target
+     on an older, less precise digitizer. */
   #tap-zone {
     position: absolute;
     top: 50%;
@@ -308,30 +308,39 @@
       -0.08vmin -0.12vmin 0.18vmin rgba(0,0,0,0.35);
   }
 
-  /* ===================== Railway Station design ===================== */
+  /* ===================== Karlsson-style design =====================
+     Beveled black "picture frame" case (mimicking the iPad's own
+     rounded-rectangle bezel), soft white face, bold rounded numerals at
+     2/3/4/6/8/9/10/12, diagonal dash ticks at 1/5/7/11, small dot minute
+     marks elsewhere, and chunky blunt (non-tapered) hands. */
 
-  #r-case {
+  #k-case {
     position: relative;
-    border-radius: 4%;
-    background: -webkit-linear-gradient(180deg, #2a2a2a, #0c0c0c);
-    background: linear-gradient(180deg, #2a2a2a, #0c0c0c);
+    border-radius: 7%;
+    background:
+      -webkit-linear-gradient(155deg, #4a3626 0%, #0a0908 10%, #0a0908 90%, #2e2013 100%);
+    background:
+      linear-gradient(155deg, #4a3626 0%, #0a0908 10%, #0a0908 90%, #2e2013 100%);
     box-shadow:
-      0 3vmin 6vmin rgba(0,0,0,0.7),
-      inset 0 0 0.4vmin rgba(255,255,255,0.1);
-    padding: 2.6%;
+      0 3vmin 6vmin rgba(0,0,0,0.75),
+      inset 0 0.4vmin 0.8vmin rgba(255,255,255,0.08),
+      inset 0 -0.4vmin 0.8vmin rgba(0,0,0,0.6);
+    padding: 6%;
   }
 
-  #r-clock {
+  #k-clock {
     position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 2%;
-    background: #f6f5f0;
-    box-shadow: inset 0 0 1vmin rgba(0,0,0,0.15);
+    border-radius: 3%;
+    background: #f7f5f0;
+    box-shadow:
+      inset 0 0 0 0.3vmin rgba(0,0,0,0.55),
+      inset 0 0.3vmin 0.8vmin rgba(0,0,0,0.12);
     overflow: hidden;
   }
 
-  #r-hands-stage {
+  #k-hands-stage {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -339,7 +348,7 @@
     transform: translate(-50%, -50%);
   }
 
-  #view-railway .hand {
+  #view-karlsson .hand {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -347,103 +356,89 @@
     transform-origin: 50% 100%;
   }
 
-  #r-hour {
-    width: 3.6%;
-    height: 25%;
-    margin-left: -1.8%;
-    margin-top: -25%;
-    background: #111;
-    -webkit-clip-path: polygon(50% 0%, 72% 22%, 72% 100%, 28% 100%, 28% 22%);
-    clip-path: polygon(50% 0%, 72% 22%, 72% 100%, 28% 100%, 28% 22%);
+  /* Chunky, blunt (non-tapered) hour hand with a rounded tip */
+  #k-hour {
+    width: 4.6%;
+    height: 24%;
+    margin-left: -2.3%;
+    margin-top: -24%;
+    background: #16130f;
+    border-radius: 1.2vmin 1.2vmin 0.4vmin 0.4vmin;
   }
 
-  #r-minute {
-    width: 2.6%;
-    height: 37%;
-    margin-left: -1.3%;
-    margin-top: -37%;
-    background: #111;
-    -webkit-clip-path: polygon(50% 0%, 70% 16%, 70% 100%, 30% 100%, 30% 16%);
-    clip-path: polygon(50% 0%, 70% 16%, 70% 100%, 30% 100%, 30% 16%);
+  /* Chunky, blunt (non-tapered) minute hand with a rounded tip */
+  #k-minute {
+    width: 3.8%;
+    height: 35%;
+    margin-left: -1.9%;
+    margin-top: -35%;
+    background: #16130f;
+    border-radius: 1.2vmin 1.2vmin 0.4vmin 0.4vmin;
   }
 
-  #r-second {
-    width: 0.55%;
-    height: 42%;
-    margin-left: -0.275%;
-    margin-top: -30%;
-    background: #c8102e;
-    -webkit-transform-origin: 50% 71.4%;
-    transform-origin: 50% 71.4%;
+  /* Thin second hand — understated, matching the plain black/white
+     palette (no red accent in the reference) */
+  #k-second {
+    width: 0.5%;
+    height: 38%;
+    margin-left: -0.25%;
+    margin-top: -27%;
+    background: #16130f;
+    -webkit-transform-origin: 50% 71%;
+    transform-origin: 50% 71%;
     z-index: 5;
   }
-  #r-second-tail {
+  #k-second-tail {
     position: absolute;
-    bottom: -14%;
+    bottom: -12%;
     left: 50%;
-    width: 0.55%;
-    height: 14%;
+    width: 0.5%;
+    height: 12%;
     -webkit-transform: translateX(-50%);
     transform: translateX(-50%);
-    background: #c8102e;
+    background: #16130f;
   }
 
-  #view-railway .number {
+  #view-karlsson .number {
     position: absolute;
-    font-family: Arial, 'Helvetica Neue', sans-serif;
-    font-weight: 700;
-    color: #111;
+    /* Fredoka (Google Fonts) — a close match to the reference's rounded
+       bold numerals. Loaded externally, so it depends on the network and
+       certificate trust working (a separate risk from the GitHub Pages
+       one discussed earlier — Google's cert chain differs and may fare
+       better on iOS 10, but isn't guaranteed). Falls back to bold
+       Verdana automatically if the webfont fails to load. */
+    font-family: 'Fredoka', Verdana, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 600;
+    color: #16130f;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
     line-height: 1;
   }
 
-  #r-date-window {
+  /* Diagonal dash ticks at 1/5/7/11, where the reference has a short
+     angled line instead of a numeral */
+  #view-karlsson .dash-tick {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    background: #16130f;
+    -webkit-transform-origin: center;
+    transform-origin: center;
+  }
+
+  /* Small round dot minute marks at the 48 non-hour positions */
+  #view-karlsson .min-dot {
+    position: absolute;
+    background: #16130f;
+    border-radius: 50%;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
-    background: #fff;
-    border: 0.18vmin solid #111;
-    display: -webkit-flex;
-    display: flex;
-    -webkit-align-items: center;
-    align-items: center;
-    -webkit-justify-content: center;
-    justify-content: center;
-  }
-  #r-date-window span {
-    font-family: Arial, 'Helvetica Neue', sans-serif;
-    font-weight: 700;
-    color: #111;
-    line-height: 1;
+    opacity: 0.55;
   }
 
-  #view-railway .tick-major,
-  #view-railway .tick-minor {
+  #k-pivot {
     position: absolute;
     top: 50%;
     left: 50%;
-    -webkit-transform-origin: 50% 0%;
-    transform-origin: 50% 0%;
-    background: #111;
-  }
-  #view-railway .tick-major {
-    width: 0.4%;
-    height: 8%;
-  }
-  #view-railway .tick-minor {
-    width: 0.18%;
-    height: 4%;
-    opacity: 0.7;
-  }
-
-  #r-pivot {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    background: #111;
+    background: #16130f;
     border-radius: 50%;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
@@ -471,17 +466,16 @@
   </div>
 </div>
 
-<div id="view-railway" class="view">
-  <div id="r-case">
-    <div id="r-clock">
-      <div id="r-date-window"><span id="r-date-num"></span></div>
-      <div id="r-hands-stage">
-        <div id="r-hour" class="hand"></div>
-        <div id="r-minute" class="hand"></div>
-        <div id="r-second" class="hand">
-          <div id="r-second-tail"></div>
+<div id="view-karlsson" class="view">
+  <div id="k-case">
+    <div id="k-clock">
+      <div id="k-hands-stage">
+        <div id="k-hour" class="hand"></div>
+        <div id="k-minute" class="hand"></div>
+        <div id="k-second" class="hand">
+          <div id="k-second-tail"></div>
         </div>
-        <div id="r-pivot"></div>
+        <div id="k-pivot"></div>
       </div>
     </div>
   </div>
@@ -620,7 +614,6 @@ var Jones = (function () {
     hourHand.style.transform = hrT;
   }
 
-  // Parallax tilt (fires directly on iOS 10 — no permission gate exists yet)
   (function setupParallax() {
     var glassEl = document.getElementById('j-glass');
 
@@ -652,27 +645,25 @@ var Jones = (function () {
   return { layout: layout, update: update };
 })();
 
-// ===================== Railway Station design =====================
-var Railway = (function () {
-  var caseEl = document.getElementById('r-case');
-  var clock = document.getElementById('r-clock');
-  var handsStage = document.getElementById('r-hands-stage');
-  var pivot = document.getElementById('r-pivot');
-  var dateWindow = document.getElementById('r-date-window');
-  var dateNum = document.getElementById('r-date-num');
-  var dialW_g = 0;
-  var dialH_g = 0;
+// ===================== Karlsson-style design =====================
+var Karlsson = (function () {
+  var caseEl = document.getElementById('k-case');
+  var clock = document.getElementById('k-clock');
+  var handsStage = document.getElementById('k-hands-stage');
+  var pivot = document.getElementById('k-pivot');
   var built = false;
 
   function layout() {
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
-    var caseW = Math.min(vw, vh * 1.5);
-    var caseH = caseW * (2 / 3);
+    // Wider landscape ratio than the Jones design (~1.75:1), matching
+    // the reference clock's proportions more closely
+    var caseW = Math.min(vw, vh * 1.75);
+    var caseH = caseW / 1.75;
     if (caseH > vh) {
       caseH = vh;
-      caseW = caseH * 1.5;
+      caseW = caseH * 1.75;
     }
     caseEl.style.width = caseW + 'px';
     caseEl.style.height = caseH + 'px';
@@ -681,34 +672,36 @@ var Railway = (function () {
     var dialH = clockRect.height;
     var dialW = clockRect.width;
 
-    dialW_g = dialW;
-    dialH_g = dialH;
-
     handsStage.style.width = dialH + 'px';
     handsStage.style.height = dialH + 'px';
 
-    var pivotSize = dialH * 0.022;
+    var pivotSize = dialH * 0.03;
     pivot.style.width = pivotSize + 'px';
     pivot.style.height = pivotSize + 'px';
 
-    var numSize = Math.max(16, Math.min(dialH * 0.16, 40));
+    var numSize = Math.max(11, Math.min(dialH * 0.13, 26));
     var numbers = clock.getElementsByClassName('number');
     for (var i = 0; i < numbers.length; i++) {
       numbers[i].style.fontSize = numSize + 'px';
     }
 
-    var winW = dialH * 0.16;
-    var winH = dialH * 0.12;
-    dateWindow.style.width = winW + 'px';
-    dateWindow.style.height = winH + 'px';
-    dateNum.style.fontSize = Math.max(13, Math.min(dialH * 0.11, 28)) + 'px';
+    var dashLen = dialH * 0.09;
+    var dashes = clock.getElementsByClassName('dash-tick');
+    for (var j = 0; j < dashes.length; j++) {
+      dashes[j].style.width = (dashLen * 0.14) + 'px';
+      dashes[j].style.height = dashLen + 'px';
+    }
 
-    var dateOffsetPx = dialH * 0.33;
-    dateWindow.style.left = (dialW / 2 + dateOffsetPx) + 'px';
-    dateWindow.style.top = (dialH / 2) + 'px';
+    var minDotSize = dialW * 0.009;
+    var minDots = clock.getElementsByClassName('min-dot');
+    for (var m = 0; m < minDots.length; m++) {
+      minDots[m].style.width = minDotSize + 'px';
+      minDots[m].style.height = minDotSize + 'px';
+    }
   }
 
-  var RX_NUM = 41, RY_NUM = 32;
+  var RX_NUM = 33, RY_NUM = 37;
+  var RX_TICK = 38, RY_TICK = 29;
 
   function polar(rx, ry, angleDeg) {
     var rad = (angleDeg - 90) * Math.PI / 180;
@@ -718,36 +711,53 @@ var Railway = (function () {
     };
   }
 
+  // Hour positions that show a numeral vs. a diagonal dash, matching
+  // the reference photo's specific (non-standard) pattern
+  var NUMBER_HOURS = { 2: 1, 3: 1, 4: 1, 6: 1, 8: 1, 9: 1, 10: 1, 12: 1 };
+
   function build() {
     if (built) return;
     built = true;
 
     for (var h = 1; h <= 12; h++) {
       var angle = h * 30;
-      var pos = polar(RX_NUM, RY_NUM, angle);
-      var el = document.createElement('div');
-      el.className = 'number';
-      el.textContent = String(h);
-      el.style.left = pos.x + '%';
-      el.style.top = pos.y + '%';
-      clock.appendChild(el);
+      if (NUMBER_HOURS[h]) {
+        var pos = polar(RX_NUM, RY_NUM, angle);
+        var el = document.createElement('div');
+        el.className = 'number';
+        el.textContent = String(h);
+        el.style.left = pos.x + '%';
+        el.style.top = pos.y + '%';
+        clock.appendChild(el);
+      } else {
+        var tpos = polar(RX_TICK, RY_TICK, angle);
+        var dash = document.createElement('div');
+        dash.className = 'dash-tick';
+        dash.style.left = tpos.x + '%';
+        dash.style.top = tpos.y + '%';
+        var dt = 'translate(-50%, -50%) rotate(' + angle + 'deg)';
+        dash.style.webkitTransform = dt;
+        dash.style.transform = dt;
+        clock.appendChild(dash);
+      }
     }
 
+    // Small dot minute marks at the remaining 48 (non-hour) positions
     for (var i = 0; i < 60; i++) {
-      var tAngle = i * 6;
-      var isMajor = i % 5 === 0;
-      var tick = document.createElement('div');
-      tick.className = isMajor ? 'tick-major' : 'tick-minor';
-      var t = 'translate(-50%, 0) rotate(' + tAngle + 'deg)';
-      tick.style.webkitTransform = t;
-      tick.style.transform = t;
-      clock.appendChild(tick);
+      if (i % 5 === 0) continue;
+      var mAngle = i * 6;
+      var mpos = polar(RX_TICK, RY_TICK, mAngle);
+      var dot = document.createElement('div');
+      dot.className = 'min-dot';
+      dot.style.left = mpos.x + '%';
+      dot.style.top = mpos.y + '%';
+      clock.appendChild(dot);
     }
   }
 
-  var hourHand = document.getElementById('r-hour');
-  var minuteHand = document.getElementById('r-minute');
-  var secondHand = document.getElementById('r-second');
+  var hourHand = document.getElementById('k-hour');
+  var minuteHand = document.getElementById('k-minute');
+  var secondHand = document.getElementById('k-second');
 
   function update() {
     var now = new Date();
@@ -755,22 +765,9 @@ var Railway = (function () {
     var min = now.getMinutes();
     var hr  = now.getHours() % 12;
 
-    var secAngle = sec * 6;
-    var secT = 'rotate(' + secAngle + 'deg)';
+    var secT = 'rotate(' + (sec * 6) + 'deg)';
     var minT = 'rotate(' + ((min * 6) + (sec * 0.1)) + 'deg)';
     var hrT  = 'rotate(' + ((hr * 30) + (min * 0.5)) + 'deg)';
-
-    if (dialW_g && dialH_g) {
-      var a = dialW_g * 0.42;
-      var b = dialH_g * 0.42;
-      var phi = secAngle * Math.PI / 180;
-      var lenPx = (a * b) / Math.sqrt(
-        Math.pow(b * Math.sin(phi), 2) + Math.pow(a * Math.cos(phi), 2)
-      );
-      var pivotFraction = 0.714;
-      secondHand.style.height = lenPx + 'px';
-      secondHand.style.marginTop = (-pivotFraction * lenPx) + 'px';
-    }
 
     secondHand.style.webkitTransform = secT;
     secondHand.style.transform = secT;
@@ -778,8 +775,6 @@ var Railway = (function () {
     minuteHand.style.transform = minT;
     hourHand.style.webkitTransform = hrT;
     hourHand.style.transform = hrT;
-
-    dateNum.textContent = String(now.getDate());
   }
 
   build();
@@ -790,11 +785,11 @@ var Railway = (function () {
 // ===================== Shared: layout, ticking, toggle =====================
 function layoutAll() {
   Jones.layout();
-  Railway.layout();
+  Karlsson.layout();
 }
 function updateAll() {
   Jones.update();
-  Railway.update();
+  Karlsson.update();
 }
 
 layoutAll();
@@ -809,14 +804,14 @@ setInterval(updateAll, 1000);
 // Tap the center of the dial to switch between designs
 (function setupToggle() {
   var viewJones = document.getElementById('view-jones');
-  var viewRailway = document.getElementById('view-railway');
+  var viewKarlsson = document.getElementById('view-karlsson');
   var tapZone = document.getElementById('tap-zone');
   var showingJones = true;
 
   function toggle() {
     showingJones = !showingJones;
     viewJones.style.display = showingJones ? 'flex' : 'none';
-    viewRailway.style.display = showingJones ? 'none' : 'flex';
+    viewKarlsson.style.display = showingJones ? 'none' : 'flex';
     // Re-measure the newly visible view — its dial was un-rendered
     // (display:none) while hidden, so getBoundingClientRect() would have
     // returned zeros for it during any layout() calls while it was off.
