@@ -4,7 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>Wall Clock - Ticking Quartz</title>
+<title>Wall Clock</title>
 <style>
   * {
     -webkit-user-select: none;
@@ -20,18 +20,51 @@
     background: #090a0d;
     overflow: hidden;
   }
-  body {
+
+  /* Each design gets its own full-screen layer, stacked on top of each
+     other. Only one is display:block at a time; the other is display:none.
+     Moving flex-centering here (off body) means toggling doesn't disturb
+     layout of whichever one becomes visible. */
+  .view {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
     display: -webkit-flex;
-    display: flex;
     -webkit-align-items: center;
     align-items: center;
     -webkit-justify-content: center;
     justify-content: center;
   }
+  #view-jones {
+    display: flex;
+    background: #090a0d;
+  }
+  #view-railway {
+    display: none;
+    background: #050505;
+  }
 
-  /* Case with stronger bevel and depth. width/height set via JS —
-     no aspect-ratio support on iOS 10. */
-  #case {
+  /* Invisible tap target centered on the dial's pivot point, above both
+     designs, used to toggle between them. Sized generously (44px+) for a
+     reliable touch target on an old, less-precise digitizer. */
+  #tap-zone {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 22vmin;
+    height: 22vmin;
+    min-width: 60px;
+    min-height: 60px;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: transparent;
+  }
+
+  /* ===================== Jones "Movie Retro" design ===================== */
+
+  #j-case {
     position: relative;
     border-radius: 12%;
     background:
@@ -50,8 +83,7 @@
     transform: rotateX(0deg) rotateY(0deg);
   }
 
-  /* Dial with paper grain + radial shading */
-  #clock {
+  #j-clock {
     position: relative;
     width: 100%;
     height: 100%;
@@ -76,9 +108,7 @@
     overflow: hidden;
   }
 
-  /* Inner lip where glass meets case. `inset: 1.5%` -> explicit sides
-     (iOS 10 doesn't support the inset shorthand). */
-  #clock::before {
+  #j-clock::before {
     content: '';
     position: absolute;
     top: 1.5%; right: 1.5%; bottom: 1.5%; left: 1.5%;
@@ -90,10 +120,7 @@
     pointer-events: none;
   }
 
-  /* Glass with curved reflection and vignette. `mix-blend-mode: screen`
-     removed (unsupported on iOS 10) — opacity is tuned up slightly on
-     each layer to compensate for the lost blending. */
-  #glass {
+  #j-glass {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
     border-radius: 9%;
@@ -111,8 +138,7 @@
     z-index: 10;
   }
 
-  /* Subtle vignette on dial edges */
-  #clock::after {
+  #j-clock::after {
     content: '';
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
@@ -123,8 +149,7 @@
     z-index: 2;
   }
 
-  /* Square stage sized to dial height, set via JS (no aspect-ratio) */
-  #hands-stage {
+  #j-hands-stage {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -132,7 +157,7 @@
     transform: translate(-50%, -50%);
   }
 
-  .hand {
+  #view-jones .hand {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -140,8 +165,7 @@
     transform-origin: 50% 100%;
   }
 
-  /* Tapered metallic hour hand */
-  #hour {
+  #j-hour {
     width: 4.4%;
     height: 26%;
     margin-left: -2.2%;
@@ -155,8 +179,7 @@
     border-radius: 2vmin 2vmin 0 0;
   }
 
-  /* Tapered metallic minute hand with stronger highlight */
-  #minute {
+  #j-minute {
     width: 3.4%;
     height: 36%;
     margin-left: -1.7%;
@@ -170,8 +193,7 @@
     border-radius: 2vmin 2vmin 0 0;
   }
 
-  /* Second hand with counterweight */
-  #second {
+  #j-second {
     width: 0.6%;
     height: 34%;
     margin-left: -0.3%;
@@ -182,7 +204,7 @@
     z-index: 4;
   }
 
-  #second-counterweight {
+  #j-second-counterweight {
     position: absolute;
     bottom: -18%;
     left: 50%;
@@ -198,7 +220,7 @@
     box-shadow: 0 0.25vmin 0.45vmin rgba(0,0,0,0.7);
   }
 
-  .number {
+  #view-jones .number {
     position: absolute;
     font-family: 'Arial Black', Arial, sans-serif;
     font-weight: 900;
@@ -210,7 +232,7 @@
                  -0.1vmin -0.1vmin 0.2vmin rgba(0,0,0,0.25);
   }
 
-  .dot {
+  #view-jones .dot {
     position: absolute;
     background: #1f1f1f;
     border-radius: 50%;
@@ -219,9 +241,8 @@
     box-shadow: 0.1vmin 0.15vmin 0.1vmin rgba(255,255,255,0.3);
   }
 
-  /* Major and minor tick marks */
-  .radial-major,
-  .radial-minor {
+  #view-jones .radial-major,
+  #view-jones .radial-minor {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -234,19 +255,18 @@
     box-shadow: 0.08vmin 0.12vmin 0.12vmin rgba(255,255,255,0.15);
   }
 
-  .radial-major {
+  #view-jones .radial-major {
     width: 0.35%;
     height: 20%;
   }
 
-  .radial-minor {
+  #view-jones .radial-minor {
     width: 0.18%;
     height: 12%;
     opacity: 0.09;
   }
 
-  /* Sized via JS — no aspect-ratio */
-  #inner-ring {
+  #j-inner-ring {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -256,8 +276,7 @@
     border: 0.2vmin dotted rgba(31,31,31,0.15);
   }
 
-  /* Raised pivot cap. Sized via JS — no aspect-ratio */
-  #pivot {
+  #j-pivot {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -274,8 +293,7 @@
     z-index: 6;
   }
 
-  /* Embossed brand logo */
-  #brand {
+  #j-brand {
     position: absolute;
     top: 27%;
     left: 50%;
@@ -289,197 +307,529 @@
       0.08vmin 0.12vmin 0.12vmin rgba(255,255,255,0.5),
       -0.08vmin -0.12vmin 0.18vmin rgba(0,0,0,0.35);
   }
+
+  /* ===================== Railway Station design ===================== */
+
+  #r-case {
+    position: relative;
+    border-radius: 4%;
+    background: -webkit-linear-gradient(180deg, #2a2a2a, #0c0c0c);
+    background: linear-gradient(180deg, #2a2a2a, #0c0c0c);
+    box-shadow:
+      0 3vmin 6vmin rgba(0,0,0,0.7),
+      inset 0 0 0.4vmin rgba(255,255,255,0.1);
+    padding: 2.6%;
+  }
+
+  #r-clock {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 2%;
+    background: #f6f5f0;
+    box-shadow: inset 0 0 1vmin rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+
+  #r-hands-stage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+
+  #view-railway .hand {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform-origin: 50% 100%;
+    transform-origin: 50% 100%;
+  }
+
+  #r-hour {
+    width: 3.6%;
+    height: 25%;
+    margin-left: -1.8%;
+    margin-top: -25%;
+    background: #111;
+    -webkit-clip-path: polygon(50% 0%, 72% 22%, 72% 100%, 28% 100%, 28% 22%);
+    clip-path: polygon(50% 0%, 72% 22%, 72% 100%, 28% 100%, 28% 22%);
+  }
+
+  #r-minute {
+    width: 2.6%;
+    height: 37%;
+    margin-left: -1.3%;
+    margin-top: -37%;
+    background: #111;
+    -webkit-clip-path: polygon(50% 0%, 70% 16%, 70% 100%, 30% 100%, 30% 16%);
+    clip-path: polygon(50% 0%, 70% 16%, 70% 100%, 30% 100%, 30% 16%);
+  }
+
+  #r-second {
+    width: 0.55%;
+    height: 42%;
+    margin-left: -0.275%;
+    margin-top: -30%;
+    background: #c8102e;
+    -webkit-transform-origin: 50% 71.4%;
+    transform-origin: 50% 71.4%;
+    z-index: 5;
+  }
+  #r-second-tail {
+    position: absolute;
+    bottom: -14%;
+    left: 50%;
+    width: 0.55%;
+    height: 14%;
+    -webkit-transform: translateX(-50%);
+    transform: translateX(-50%);
+    background: #c8102e;
+  }
+
+  #view-railway .number {
+    position: absolute;
+    font-family: Arial, 'Helvetica Neue', sans-serif;
+    font-weight: 700;
+    color: #111;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    line-height: 1;
+  }
+
+  #r-date-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    background: #fff;
+    border: 0.18vmin solid #111;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+  }
+  #r-date-window span {
+    font-family: Arial, 'Helvetica Neue', sans-serif;
+    font-weight: 700;
+    color: #111;
+    line-height: 1;
+  }
+
+  #view-railway .tick-major,
+  #view-railway .tick-minor {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform-origin: 50% 0%;
+    transform-origin: 50% 0%;
+    background: #111;
+  }
+  #view-railway .tick-major {
+    width: 0.4%;
+    height: 8%;
+  }
+  #view-railway .tick-minor {
+    width: 0.18%;
+    height: 4%;
+    opacity: 0.7;
+  }
+
+  #r-pivot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background: #111;
+    border-radius: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    z-index: 6;
+  }
 </style>
 </head>
 <body>
 
-<div id="case">
-  <div id="clock">
-    <div id="brand">Jones</div>
-    <div id="inner-ring"></div>
-    <div id="hands-stage">
-      <div id="hour" class="hand"></div>
-      <div id="minute" class="hand"></div>
-      <div id="second" class="hand">
-        <div id="second-counterweight"></div>
+<div id="view-jones" class="view">
+  <div id="j-case">
+    <div id="j-clock">
+      <div id="j-brand">Jones</div>
+      <div id="j-inner-ring"></div>
+      <div id="j-hands-stage">
+        <div id="j-hour" class="hand"></div>
+        <div id="j-minute" class="hand"></div>
+        <div id="j-second" class="hand">
+          <div id="j-second-counterweight"></div>
+        </div>
+        <div id="j-pivot"></div>
       </div>
-      <div id="pivot"></div>
+      <div id="j-glass"></div>
     </div>
-    <div id="glass"></div>
   </div>
 </div>
 
+<div id="view-railway" class="view">
+  <div id="r-case">
+    <div id="r-clock">
+      <div id="r-date-window"><span id="r-date-num"></span></div>
+      <div id="r-hands-stage">
+        <div id="r-hour" class="hand"></div>
+        <div id="r-minute" class="hand"></div>
+        <div id="r-second" class="hand">
+          <div id="r-second-tail"></div>
+        </div>
+        <div id="r-pivot"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tap-zone"></div>
+
 <script>
-var caseEl = document.getElementById('case');
-var clock = document.getElementById('clock');
-var handsStage = document.getElementById('hands-stage');
-var innerRing = document.getElementById('inner-ring');
-var pivot = document.getElementById('pivot');
-var brand = document.getElementById('brand');
+// ===================== Jones "Movie Retro" design =====================
+var Jones = (function () {
+  var caseEl = document.getElementById('j-case');
+  var clock = document.getElementById('j-clock');
+  var handsStage = document.getElementById('j-hands-stage');
+  var innerRing = document.getElementById('j-inner-ring');
+  var pivot = document.getElementById('j-pivot');
+  var brand = document.getElementById('j-brand');
+  var built = false;
 
-// --- Sizing (replaces aspect-ratio, clamp(), and container queries,
-// none of which exist on iOS 10 Safari) ---
-function layout() {
-  var vw = window.innerWidth;
-  var vh = window.innerHeight;
+  function layout() {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
 
-  // #case: landscape 3:2, capped by both viewport width and height
-  var caseW = Math.min(vw, vh * 1.5);
-  var caseH = caseW * (2 / 3);
-  if (caseH > vh) {
-    caseH = vh;
-    caseW = caseH * 1.5;
-  }
-  caseEl.style.width = caseW + 'px';
-  caseEl.style.height = caseH + 'px';
+    var caseW = Math.min(vw, vh * 1.5);
+    var caseH = caseW * (2 / 3);
+    if (caseH > vh) {
+      caseH = vh;
+      caseW = caseH * 1.5;
+    }
+    caseEl.style.width = caseW + 'px';
+    caseEl.style.height = caseH + 'px';
 
-  var clockRect = clock.getBoundingClientRect();
-  var dialH = clockRect.height;
-  var dialW = clockRect.width;
+    var clockRect = clock.getBoundingClientRect();
+    var dialH = clockRect.height;
+    var dialW = clockRect.width;
 
-  // hands-stage: square sized to dial height (was aspect-ratio:1/1 + height:100%)
-  handsStage.style.width = dialH + 'px';
-  handsStage.style.height = dialH + 'px';
+    handsStage.style.width = dialH + 'px';
+    handsStage.style.height = dialH + 'px';
 
-  // inner-ring: was width:11% + aspect-ratio:1
-  var ringSize = dialW * 0.11;
-  innerRing.style.width = ringSize + 'px';
-  innerRing.style.height = ringSize + 'px';
+    var ringSize = dialW * 0.11;
+    innerRing.style.width = ringSize + 'px';
+    innerRing.style.height = ringSize + 'px';
 
-  // pivot: was width/height:2.4% + aspect-ratio:1, based on stage (square)
-  var pivotSize = dialH * 0.024;
-  pivot.style.width = pivotSize + 'px';
-  pivot.style.height = pivotSize + 'px';
+    var pivotSize = dialH * 0.024;
+    pivot.style.width = pivotSize + 'px';
+    pivot.style.height = pivotSize + 'px';
 
-  // font sizes: was clamp(min, preferred-vw/cqh, max)
-  var numSize = Math.max(19, Math.min(dialH * 0.24, 51));
-  var dots = clock.getElementsByClassName('dot');
-  var numbers = clock.getElementsByClassName('number');
-  for (var i = 0; i < numbers.length; i++) {
-    numbers[i].style.fontSize = numSize + 'px';
-  }
-  var dotSize = dialW * 0.013;
-  for (var j = 0; j < dots.length; j++) {
-    dots[j].style.width = dotSize + 'px';
-    dots[j].style.height = dotSize + 'px';
-  }
-  brand.style.fontSize = Math.max(9, Math.min(dialH * 0.09, 16)) + 'px';
-}
-
-var RX_NUM = 40, RY_NUM = 33;
-var RX_DOT = 40, RY_DOT = 33;
-
-function polar(rx, ry, angleDeg) {
-  var rad = (angleDeg - 90) * Math.PI / 180;
-  return {
-    x: 50 + rx * Math.cos(rad),
-    y: 50 + ry * Math.sin(rad)
-  };
-}
-
-// 12, 3, 6, 9 numerals
-var numerals = [
-  { label: '12', angle: 0 },
-  { label: '3',  angle: 90 },
-  { label: '6',  angle: 180 },
-  { label: '9',  angle: 270 }
-];
-for (var n = 0; n < numerals.length; n++) {
-  var pos = polar(RX_NUM, RY_NUM, numerals[n].angle);
-  var el = document.createElement('div');
-  el.className = 'number';
-  el.textContent = numerals[n].label;
-  el.style.left = pos.x + '%';
-  el.style.top = pos.y + '%';
-  clock.appendChild(el);
-}
-
-// Hour dots at the remaining eight positions
-var dotAngles = [30, 60, 120, 150, 210, 240, 300, 330];
-for (var d = 0; d < dotAngles.length; d++) {
-  var dpos = polar(RX_DOT, RY_DOT, dotAngles[d]);
-  var dot = document.createElement('div');
-  dot.className = 'dot';
-  dot.style.left = dpos.x + '%';
-  dot.style.top = dpos.y + '%';
-  clock.appendChild(dot);
-}
-
-// Major and minor tick marks — 60 total
-for (var i = 0; i < 60; i++) {
-  var angle = i * 6;
-  var isMajor = i % 5 === 0;
-  var line = document.createElement('div');
-  line.className = isMajor ? 'radial-major' : 'radial-minor';
-  var t = 'translate(-50%, 0) rotate(' + angle + 'deg)';
-  line.style.webkitTransform = t;
-  line.style.transform = t;
-  clock.appendChild(line);
-}
-
-var hourHand = document.getElementById('hour');
-var minuteHand = document.getElementById('minute');
-var secondHand = document.getElementById('second');
-
-function updateClock() {
-  var now = new Date();
-  var sec = now.getSeconds();
-  var min = now.getMinutes();
-  var hr  = now.getHours() % 12;
-
-  // Slight overshoot for quartz tick feel
-  var secBase = sec * 6;
-  var secOvershoot = secBase + (sec % 2 === 0 ? 0.8 : -0.4);
-
-  var secT = 'rotate(' + secOvershoot + 'deg)';
-  var minT = 'rotate(' + ((min * 6) + (sec * 0.1)) + 'deg)';
-  var hrT  = 'rotate(' + ((hr * 30) + (min * 0.5)) + 'deg)';
-
-  secondHand.style.webkitTransform = secT;
-  secondHand.style.transform = secT;
-  minuteHand.style.webkitTransform = minT;
-  minuteHand.style.transform = minT;
-  hourHand.style.webkitTransform = hrT;
-  hourHand.style.transform = hrT;
-}
-
-// Subtle parallax tilt for glass and case (works on iOS 10 without any
-// permission prompt — the iOS 13+ requestPermission() gate doesn't
-// exist yet on this OS version, so this can fire directly)
-(function setupParallax() {
-  var glassEl = document.getElementById('glass');
-
-  function applyTilt(beta, gamma) {
-    var maxTilt = 4;
-    var xTilt = (gamma / 45) * maxTilt;
-    var yTilt = (beta / 45) * maxTilt;
-
-    var caseT = 'rotateX(' + (yTilt * 0.25) + 'deg) rotateY(' + (xTilt * 0.25) + 'deg)';
-    var glassT = 'translate(-1%, -1%) rotateX(' + (yTilt * 0.6) + 'deg) rotateY(' + (xTilt * 0.6) + 'deg)';
-
-    caseEl.style.webkitTransform = caseT;
-    caseEl.style.transform = caseT;
-    glassEl.style.webkitTransform = glassT;
-    glassEl.style.transform = glassT;
+    var numSize = Math.max(19, Math.min(dialH * 0.24, 51));
+    var dots = clock.getElementsByClassName('dot');
+    var numbers = clock.getElementsByClassName('number');
+    for (var i = 0; i < numbers.length; i++) {
+      numbers[i].style.fontSize = numSize + 'px';
+    }
+    var dotSize = dialW * 0.013;
+    for (var j = 0; j < dots.length; j++) {
+      dots[j].style.width = dotSize + 'px';
+      dots[j].style.height = dotSize + 'px';
+    }
+    brand.style.fontSize = Math.max(9, Math.min(dialH * 0.09, 16)) + 'px';
   }
 
-  if (window.DeviceOrientationEvent) {
-    window.addEventListener('deviceorientation', function (event) {
-      var beta = event.beta || 0;
-      var gamma = event.gamma || 0;
-      applyTilt(beta, gamma);
-    }, true);
+  var RX_NUM = 40, RY_NUM = 33;
+  var RX_DOT = 40, RY_DOT = 33;
+
+  function polar(rx, ry, angleDeg) {
+    var rad = (angleDeg - 90) * Math.PI / 180;
+    return {
+      x: 50 + rx * Math.cos(rad),
+      y: 50 + ry * Math.sin(rad)
+    };
   }
+
+  function build() {
+    if (built) return;
+    built = true;
+
+    var numerals = [
+      { label: '12', angle: 0 },
+      { label: '3',  angle: 90 },
+      { label: '6',  angle: 180 },
+      { label: '9',  angle: 270 }
+    ];
+    for (var n = 0; n < numerals.length; n++) {
+      var pos = polar(RX_NUM, RY_NUM, numerals[n].angle);
+      var el = document.createElement('div');
+      el.className = 'number';
+      el.textContent = numerals[n].label;
+      el.style.left = pos.x + '%';
+      el.style.top = pos.y + '%';
+      clock.appendChild(el);
+    }
+
+    var dotAngles = [30, 60, 120, 150, 210, 240, 300, 330];
+    for (var d = 0; d < dotAngles.length; d++) {
+      var dpos = polar(RX_DOT, RY_DOT, dotAngles[d]);
+      var dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.left = dpos.x + '%';
+      dot.style.top = dpos.y + '%';
+      clock.appendChild(dot);
+    }
+
+    for (var i = 0; i < 60; i++) {
+      var angle = i * 6;
+      var isMajor = i % 5 === 0;
+      var line = document.createElement('div');
+      line.className = isMajor ? 'radial-major' : 'radial-minor';
+      var t = 'translate(-50%, 0) rotate(' + angle + 'deg)';
+      line.style.webkitTransform = t;
+      line.style.transform = t;
+      clock.appendChild(line);
+    }
+  }
+
+  var hourHand = document.getElementById('j-hour');
+  var minuteHand = document.getElementById('j-minute');
+  var secondHand = document.getElementById('j-second');
+
+  function update() {
+    var now = new Date();
+    var sec = now.getSeconds();
+    var min = now.getMinutes();
+    var hr  = now.getHours() % 12;
+
+    var secBase = sec * 6;
+    var secOvershoot = secBase + (sec % 2 === 0 ? 0.8 : -0.4);
+
+    var secT = 'rotate(' + secOvershoot + 'deg)';
+    var minT = 'rotate(' + ((min * 6) + (sec * 0.1)) + 'deg)';
+    var hrT  = 'rotate(' + ((hr * 30) + (min * 0.5)) + 'deg)';
+
+    secondHand.style.webkitTransform = secT;
+    secondHand.style.transform = secT;
+    minuteHand.style.webkitTransform = minT;
+    minuteHand.style.transform = minT;
+    hourHand.style.webkitTransform = hrT;
+    hourHand.style.transform = hrT;
+  }
+
+  // Parallax tilt (fires directly on iOS 10 — no permission gate exists yet)
+  (function setupParallax() {
+    var glassEl = document.getElementById('j-glass');
+
+    function applyTilt(beta, gamma) {
+      var maxTilt = 4;
+      var xTilt = (gamma / 45) * maxTilt;
+      var yTilt = (beta / 45) * maxTilt;
+
+      var caseT = 'rotateX(' + (yTilt * 0.25) + 'deg) rotateY(' + (xTilt * 0.25) + 'deg)';
+      var glassT = 'translate(-1%, -1%) rotateX(' + (yTilt * 0.6) + 'deg) rotateY(' + (xTilt * 0.6) + 'deg)';
+
+      caseEl.style.webkitTransform = caseT;
+      caseEl.style.transform = caseT;
+      glassEl.style.webkitTransform = glassT;
+      glassEl.style.transform = glassT;
+    }
+
+    if (window.DeviceOrientationEvent) {
+      window.addEventListener('deviceorientation', function (event) {
+        var beta = event.beta || 0;
+        var gamma = event.gamma || 0;
+        applyTilt(beta, gamma);
+      }, true);
+    }
+  })();
+
+  build();
+
+  return { layout: layout, update: update };
 })();
 
-layout();
-window.addEventListener('resize', layout);
+// ===================== Railway Station design =====================
+var Railway = (function () {
+  var caseEl = document.getElementById('r-case');
+  var clock = document.getElementById('r-clock');
+  var handsStage = document.getElementById('r-hands-stage');
+  var pivot = document.getElementById('r-pivot');
+  var dateWindow = document.getElementById('r-date-window');
+  var dateNum = document.getElementById('r-date-num');
+  var dialW_g = 0;
+  var dialH_g = 0;
+  var built = false;
+
+  function layout() {
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+
+    var caseW = Math.min(vw, vh * 1.5);
+    var caseH = caseW * (2 / 3);
+    if (caseH > vh) {
+      caseH = vh;
+      caseW = caseH * 1.5;
+    }
+    caseEl.style.width = caseW + 'px';
+    caseEl.style.height = caseH + 'px';
+
+    var clockRect = clock.getBoundingClientRect();
+    var dialH = clockRect.height;
+    var dialW = clockRect.width;
+
+    dialW_g = dialW;
+    dialH_g = dialH;
+
+    handsStage.style.width = dialH + 'px';
+    handsStage.style.height = dialH + 'px';
+
+    var pivotSize = dialH * 0.022;
+    pivot.style.width = pivotSize + 'px';
+    pivot.style.height = pivotSize + 'px';
+
+    var numSize = Math.max(16, Math.min(dialH * 0.16, 40));
+    var numbers = clock.getElementsByClassName('number');
+    for (var i = 0; i < numbers.length; i++) {
+      numbers[i].style.fontSize = numSize + 'px';
+    }
+
+    var winW = dialH * 0.16;
+    var winH = dialH * 0.12;
+    dateWindow.style.width = winW + 'px';
+    dateWindow.style.height = winH + 'px';
+    dateNum.style.fontSize = Math.max(13, Math.min(dialH * 0.11, 28)) + 'px';
+
+    var dateOffsetPx = dialH * 0.33;
+    dateWindow.style.left = (dialW / 2 + dateOffsetPx) + 'px';
+    dateWindow.style.top = (dialH / 2) + 'px';
+  }
+
+  var RX_NUM = 41, RY_NUM = 32;
+
+  function polar(rx, ry, angleDeg) {
+    var rad = (angleDeg - 90) * Math.PI / 180;
+    return {
+      x: 50 + rx * Math.cos(rad),
+      y: 50 + ry * Math.sin(rad)
+    };
+  }
+
+  function build() {
+    if (built) return;
+    built = true;
+
+    for (var h = 1; h <= 12; h++) {
+      var angle = h * 30;
+      var pos = polar(RX_NUM, RY_NUM, angle);
+      var el = document.createElement('div');
+      el.className = 'number';
+      el.textContent = String(h);
+      el.style.left = pos.x + '%';
+      el.style.top = pos.y + '%';
+      clock.appendChild(el);
+    }
+
+    for (var i = 0; i < 60; i++) {
+      var tAngle = i * 6;
+      var isMajor = i % 5 === 0;
+      var tick = document.createElement('div');
+      tick.className = isMajor ? 'tick-major' : 'tick-minor';
+      var t = 'translate(-50%, 0) rotate(' + tAngle + 'deg)';
+      tick.style.webkitTransform = t;
+      tick.style.transform = t;
+      clock.appendChild(tick);
+    }
+  }
+
+  var hourHand = document.getElementById('r-hour');
+  var minuteHand = document.getElementById('r-minute');
+  var secondHand = document.getElementById('r-second');
+
+  function update() {
+    var now = new Date();
+    var sec = now.getSeconds();
+    var min = now.getMinutes();
+    var hr  = now.getHours() % 12;
+
+    var secAngle = sec * 6;
+    var secT = 'rotate(' + secAngle + 'deg)';
+    var minT = 'rotate(' + ((min * 6) + (sec * 0.1)) + 'deg)';
+    var hrT  = 'rotate(' + ((hr * 30) + (min * 0.5)) + 'deg)';
+
+    if (dialW_g && dialH_g) {
+      var a = dialW_g * 0.42;
+      var b = dialH_g * 0.42;
+      var phi = secAngle * Math.PI / 180;
+      var lenPx = (a * b) / Math.sqrt(
+        Math.pow(b * Math.sin(phi), 2) + Math.pow(a * Math.cos(phi), 2)
+      );
+      var pivotFraction = 0.714;
+      secondHand.style.height = lenPx + 'px';
+      secondHand.style.marginTop = (-pivotFraction * lenPx) + 'px';
+    }
+
+    secondHand.style.webkitTransform = secT;
+    secondHand.style.transform = secT;
+    minuteHand.style.webkitTransform = minT;
+    minuteHand.style.transform = minT;
+    hourHand.style.webkitTransform = hrT;
+    hourHand.style.transform = hrT;
+
+    dateNum.textContent = String(now.getDate());
+  }
+
+  build();
+
+  return { layout: layout, update: update };
+})();
+
+// ===================== Shared: layout, ticking, toggle =====================
+function layoutAll() {
+  Jones.layout();
+  Railway.layout();
+}
+function updateAll() {
+  Jones.update();
+  Railway.update();
+}
+
+layoutAll();
+window.addEventListener('resize', layoutAll);
 window.addEventListener('orientationchange', function () {
-  setTimeout(layout, 100);
+  setTimeout(layoutAll, 100);
 });
 
-updateClock();
-setInterval(updateClock, 1000);
+updateAll();
+setInterval(updateAll, 1000);
+
+// Tap the center of the dial to switch between designs
+(function setupToggle() {
+  var viewJones = document.getElementById('view-jones');
+  var viewRailway = document.getElementById('view-railway');
+  var tapZone = document.getElementById('tap-zone');
+  var showingJones = true;
+
+  function toggle() {
+    showingJones = !showingJones;
+    viewJones.style.display = showingJones ? 'flex' : 'none';
+    viewRailway.style.display = showingJones ? 'none' : 'flex';
+    // Re-measure the newly visible view — its dial was un-rendered
+    // (display:none) while hidden, so getBoundingClientRect() would have
+    // returned zeros for it during any layout() calls while it was off.
+    layoutAll();
+    updateAll();
+  }
+
+  tapZone.addEventListener('click', toggle);
+  tapZone.addEventListener('touchend', function (e) {
+    e.preventDefault();
+    toggle();
+  });
+})();
 </script>
 
 </body>
