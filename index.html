@@ -316,16 +316,12 @@
 
   #k-case {
     position: relative;
-    border-radius: 7%;
-    background:
-      -webkit-linear-gradient(155deg, #4a3626 0%, #0a0908 10%, #0a0908 90%, #2e2013 100%);
-    background:
-      linear-gradient(155deg, #4a3626 0%, #0a0908 10%, #0a0908 90%, #2e2013 100%);
+    border-radius: 5%;
+    background: #1c1c1e;
     box-shadow:
-      0 3vmin 6vmin rgba(0,0,0,0.75),
-      inset 0 0.4vmin 0.8vmin rgba(255,255,255,0.08),
-      inset 0 -0.4vmin 0.8vmin rgba(0,0,0,0.6);
-    padding: 6%;
+      0 3vmin 6vmin rgba(0,0,0,0.6),
+      inset 0 0.2vmin 0.4vmin rgba(255,255,255,0.06);
+    padding: 1.6%;
   }
 
   #k-clock {
@@ -444,10 +440,22 @@
     transform: translate(-50%, -50%);
     z-index: 6;
   }
+
+  /* Version marker, both faces — for confirming the iPad is actually
+     showing the latest upload rather than a cached copy */
+  .version-tag {
+    position: absolute;
+    bottom: 3%;
+    right: 3%;
+    font-family: Verdana, Arial, sans-serif;
+    font-size: 10px;
+    color: rgba(0,0,0,0.28);
+    z-index: 999;
+  }
+  #j-version { color: rgba(255,255,255,0.35); }
 </style>
 </head>
 <body>
-
 <div id="view-jones" class="view">
   <div id="j-case">
     <div id="j-clock">
@@ -462,6 +470,7 @@
         <div id="j-pivot"></div>
       </div>
       <div id="j-glass"></div>
+      <div class="version-tag" id="j-version">v1</div>
     </div>
   </div>
 </div>
@@ -477,6 +486,7 @@
         </div>
         <div id="k-pivot"></div>
       </div>
+      <div class="version-tag">v1</div>
     </div>
   </div>
 </div>
@@ -700,8 +710,8 @@ var Karlsson = (function () {
     }
   }
 
-  var RX_NUM = 33, RY_NUM = 37;
-  var RX_TICK = 38, RY_TICK = 29;
+  var RX_NUM = 40, RY_NUM = 37;
+  var RX_TICK = 34, RY_TICK = 26;
 
   function polar(rx, ry, angleDeg) {
     var rad = (angleDeg - 90) * Math.PI / 180;
