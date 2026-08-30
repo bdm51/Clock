@@ -202,23 +202,44 @@
     border-radius: 2vmin 2vmin 0 0;
   }
 
-  #j-second {
+  /* Second hand, rebuilt as a rotor + two simple children, replacing the
+     old single-box-with-fractional-transform-origin approach. That
+     required getting margin-top, height, and transform-origin% all
+     precisely consistent with each other (a fragile 3-way calculation
+     that kept landing slightly off-center). This rotor is full-size, so
+     its own center is exactly the stage's center with no math involved
+     — the visible head/tail inside it use plain 0%/100% positioning,
+     which is inherently exact. */
+  #j-second-rotor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #j-second-head {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 0.6%;
-    height: 34%;
+    height: 24.7%;
     margin-left: -0.3%;
-    /* Precise value for a 34% hand with a 72.7% transform-origin:
-       -(0.727 * 34) = -24.72%. The previous -24% was off by ~0.7 points,
-       enough to visibly miss dead-center. */
-    margin-top: -24.72%;
+    margin-top: -24.7%;
     background: #b22222;
-    -webkit-transform-origin: 50% 72.7%;
-    transform-origin: 50% 72.7%;
-    z-index: 4;
+  }
+  #j-second-tail {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.6%;
+    height: 9.3%;
+    margin-left: -0.3%;
+    background: #b22222;
   }
 
   #j-second-counterweight {
     position: absolute;
-    bottom: -18%;
+    bottom: -40%;
     left: 50%;
     width: 1.8vmin;
     height: 1.8vmin;
@@ -430,24 +451,32 @@
 
   /* Thin second hand — understated, matching the plain black/white
      palette (no red accent in the reference) */
-  #k-second {
+  /* Same rotor-based rebuild as the Jones second hand — see comment
+     there. Old height 38% / origin 71% -> head 27.0%, tail 11.0%. */
+  #k-second-rotor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  #k-second-head {
+    position: absolute;
+    top: 50%;
+    left: 50%;
     width: 0.5%;
-    height: 38%;
+    height: 27%;
     margin-left: -0.25%;
     margin-top: -27%;
     background: #16130f;
-    -webkit-transform-origin: 50% 71%;
-    transform-origin: 50% 71%;
-    z-index: 5;
   }
   #k-second-tail {
     position: absolute;
-    bottom: -12%;
+    top: 50%;
     left: 50%;
     width: 0.5%;
-    height: 12%;
-    -webkit-transform: translateX(-50%);
-    transform: translateX(-50%);
+    height: 11%;
+    margin-left: -0.25%;
     background: #16130f;
   }
 
@@ -523,13 +552,16 @@
       <div id="j-hands-stage">
         <div id="j-hour" class="hand"></div>
         <div id="j-minute" class="hand"></div>
-        <div id="j-second" class="hand">
-          <div id="j-second-counterweight"></div>
+        <div id="j-second-rotor">
+          <div id="j-second-head"></div>
+          <div id="j-second-tail">
+            <div id="j-second-counterweight"></div>
+          </div>
         </div>
         <div id="j-pivot"></div>
       </div>
       <div id="j-glass"></div>
-      <div class="version-tag" id="j-version">v4</div>
+      <div class="version-tag" id="j-version">v6</div>
     </div>
   </div>
 </div>
@@ -540,13 +572,14 @@
       <div id="k-hands-stage">
         <div id="k-hour" class="hand"></div>
         <div id="k-minute" class="hand"></div>
-        <div id="k-second" class="hand">
+        <div id="k-second-rotor">
+          <div id="k-second-head"></div>
           <div id="k-second-tail"></div>
         </div>
         <div id="k-pivot"></div>
       </div>
       <div id="k-glass"></div>
-      <div class="version-tag">v4</div>
+      <div class="version-tag">v6</div>
     </div>
   </div>
 </div>
@@ -661,7 +694,7 @@ var Jones = (function () {
 
   var hourHand = document.getElementById('j-hour');
   var minuteHand = document.getElementById('j-minute');
-  var secondHand = document.getElementById('j-second');
+  var secondHand = document.getElementById('j-second-rotor');
 
   function update() {
     var now = new Date();
@@ -836,7 +869,7 @@ var Karlsson = (function () {
 
   var hourHand = document.getElementById('k-hour');
   var minuteHand = document.getElementById('k-minute');
-  var secondHand = document.getElementById('k-second');
+  var secondHand = document.getElementById('k-second-rotor');
 
   function update() {
     var now = new Date();
