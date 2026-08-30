@@ -564,7 +564,7 @@
         <div id="j-pivot"></div>
       </div>
       <div id="j-glass"></div>
-      <div class="version-tag" id="j-version">v7</div>
+      <div class="version-tag" id="j-version">v8</div>
     </div>
   </div>
 </div>
@@ -582,7 +582,7 @@
         <div id="k-pivot"></div>
       </div>
       <div id="k-glass"></div>
-      <div class="version-tag">v7</div>
+      <div class="version-tag">v8</div>
     </div>
   </div>
 </div>
@@ -602,7 +602,7 @@ var Jones = (function () {
 
   function layout() {
     var vw = window.innerWidth;
-    var vh = window.innerHeight;
+    var vh = window.innerHeight - 20; // account for the 20px status-bar offset on .view
 
     var caseW = Math.min(vw, vh * 1.5);
     var caseH = caseW * (2 / 3);
@@ -761,7 +761,7 @@ var Karlsson = (function () {
 
   function layout() {
     var vw = window.innerWidth;
-    var vh = window.innerHeight;
+    var vh = window.innerHeight - 20; // account for the 20px status-bar offset on .view
 
     // Same fill logic as the Jones design (proven to fill the iPad
     // screen edge-to-edge with no letterboxing) — the previous 1.75:1
