@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Wall Clock</title>
@@ -32,9 +32,11 @@
 
   .view {
     position: absolute;
-    top: 20px; left: 0;
+    top: 0; left: 0;
     width: 100%;
-    height: calc(100% - 20px);
+    height: 100%;
+    display: -webkit-flex;
+    display: flex;
     -webkit-align-items: center;
     align-items: center;
     -webkit-justify-content: center;
@@ -68,15 +70,13 @@
 
   #j-case {
     position: relative;
-    width: 100%;
-    height: 100%;
-    border-radius: 0;
+    /* Custom squircle/curved frame shape mimicking the reference photo */
+    border-radius: 28px / 24px;
     background: #0d0e11;
     box-shadow:
-      inset 0 4vmin 8vmin rgba(0,0,0,0.95),
-      inset 0 1vmin 2vmin rgba(0,0,0,0.8),
-      inset 0 -4vmin 8vmin rgba(0,0,0,0.95);
-    padding: 3%;
+      0 1vmin 3vmin rgba(0,0,0,0.8),
+      inset 0 0.5vmin 1vmin rgba(255,255,255,0.1);
+    padding: 3.5%;
     -webkit-transform: rotateX(0deg) rotateY(0deg);
     transform: rotateX(0deg) rotateY(0deg);
   }
@@ -85,7 +85,7 @@
     position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 0;
+    border-radius: 20px / 18px;
     background:
       -webkit-radial-gradient(45% 35%, circle, #faf6e8 0%, #f1e8c7 55%, #dfd3a0 100%),
       -webkit-repeating-linear-gradient(0deg,
@@ -110,7 +110,7 @@
     content: '';
     position: absolute;
     top: 1.5%; right: 1.5%; bottom: 1.5%; left: 1.5%;
-    border-radius: 0;
+    border-radius: 16px / 14px;
     border: 0.25vmin solid rgba(0,0,0,0.35);
     box-shadow:
       inset 0 0.4vmin 0.8vmin rgba(255,255,255,0.25),
@@ -121,7 +121,7 @@
   #j-glass {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
-    border-radius: 0;
+    border-radius: 20px / 18px;
     background:
       -webkit-radial-gradient(50% 18%, circle, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.1) 40%, transparent 70%),
       -webkit-radial-gradient(10% 0%, circle, rgba(255,255,255,0.2) 0%, transparent 55%),
@@ -140,7 +140,7 @@
     content: '';
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
-    border-radius: 0;
+    border-radius: 20px / 18px;
     background: -webkit-radial-gradient(50% 50%, circle, transparent 60%, rgba(0,0,0,0.25) 100%);
     background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(0,0,0,0.25) 100%);
     pointer-events: none;
@@ -326,7 +326,7 @@
 
   #k-case {
     position: relative;
-    border-radius: 0;
+    border-radius: 16px;
     background: #1c1c1e;
     box-shadow:
       0 3vmin 6vmin rgba(0,0,0,0.6),
@@ -337,7 +337,7 @@
     position: relative;
     width: 100%;
     height: 100%;
-    border-radius: 0;
+    border-radius: 12px;
     background:
       -webkit-radial-gradient(42% 36%, circle, #ded4bf 0%, #cfc3a9 55%, #b8ab8c 100%),
       -webkit-repeating-linear-gradient(0deg,
@@ -363,7 +363,7 @@
     content: '';
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
-    border-radius: 0;
+    border-radius: 12px;
     background: -webkit-radial-gradient(50% 50%, circle, transparent 55%, rgba(0,0,0,0.18) 100%);
     background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(0,0,0,0.18) 100%);
     pointer-events: none;
@@ -373,7 +373,7 @@
   #k-glass {
     position: absolute;
     top: 0; right: 0; bottom: 0; left: 0;
-    border-radius: 0;
+    border-radius: 12px;
     background:
       -webkit-linear-gradient(135deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.06) 22%, transparent 45%, transparent 75%, rgba(255,255,255,0.05) 100%);
     background:
@@ -514,7 +514,7 @@
         <div id="j-pivot"></div>
       </div>
       <div id="j-glass"></div>
-      <div class="version-tag" id="j-version">v10</div>
+      <div class="version-tag" id="j-version">v11</div>
     </div>
   </div>
 </div>
@@ -532,7 +532,7 @@
         <div id="k-pivot"></div>
       </div>
       <div id="k-glass"></div>
-      <div class="version-tag">v10</div>
+      <div class="version-tag">v11</div>
     </div>
   </div>
 </div>
@@ -552,11 +552,16 @@ var Jones = (function () {
 
   function layout() {
     var vw = window.innerWidth;
-    var vh = window.innerHeight - 20;
+    var vh = window.innerHeight;
 
-    // Fill screen edges to merge with physical bezel
-    caseEl.style.width = vw + 'px';
-    caseEl.style.height = vh + 'px';
+    var caseW = Math.min(vw * 0.96, vh * 1.38);
+    var caseH = caseW * (1 / 1.38);
+    if (caseH > vh * 0.96) {
+      caseH = vh * 0.96;
+      caseW = caseH * 1.38;
+    }
+    caseEl.style.width = caseW + 'px';
+    caseEl.style.height = caseH + 'px';
 
     var clockRect = clock.getBoundingClientRect();
     var dialH = clockRect.height;
@@ -573,7 +578,6 @@ var Jones = (function () {
     pivot.style.width = pivotSize + 'px';
     pivot.style.height = pivotSize + 'px';
 
-    // Increased size further for Jones numbers
     var numSize = Math.max(35, Math.min(dialH * 0.44, 90));
     var dots = clock.getElementsByClassName('dot');
     var numbers = clock.getElementsByClassName('number');
@@ -707,12 +711,12 @@ var Karlsson = (function () {
 
   function layout() {
     var vw = window.innerWidth;
-    var vh = window.innerHeight - 20;
+    var vh = window.innerHeight;
 
-    var caseW = Math.min(vw, vh * 1.5);
+    var caseW = Math.min(vw * 0.96, vh * 1.5);
     var caseH = caseW * (2 / 3);
-    if (caseH > vh) {
-      caseH = vh;
+    if (caseH > vh * 0.96) {
+      caseH = vh * 0.96;
       caseW = caseH * 1.5;
     }
     caseEl.style.width = caseW + 'px';
@@ -801,7 +805,7 @@ var Karlsson = (function () {
       dot.className = 'min-dot';
       dot.style.left = mpos.x + '%';
       dot.style.top = mpos.y + '%';
-      clock.appendChild(dot);
+      clock.caseEl ? null : clock.appendChild(dot);
     }
   }
 
@@ -875,4 +879,3 @@ setInterval(updateAll, 1000);
 
 </body>
 </html>
-
