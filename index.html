@@ -4,8 +4,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap">
 <title>Wall Clock</title>
+<style>
+  /* Self-hosted — same origin as this page (GitHub Pages), so no
+     separate certificate-trust risk the way the Google Fonts CDN had */
+  @font-face {
+    font-family: 'Orbitron';
+    src: url('Orbitron-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+  }
+</style>
 <style>
   * {
     -webkit-user-select: none;
@@ -197,7 +206,10 @@
     width: 0.6%;
     height: 34%;
     margin-left: -0.3%;
-    margin-top: -24%;
+    /* Precise value for a 34% hand with a 72.7% transform-origin:
+       -(0.727 * 34) = -24.72%. The previous -24% was off by ~0.7 points,
+       enough to visibly miss dead-center. */
+    margin-top: -24.72%;
     background: #b22222;
     -webkit-transform-origin: 50% 72.7%;
     transform-origin: 50% 72.7%;
@@ -222,7 +234,7 @@
 
   #view-jones .number {
     position: absolute;
-    font-family: 'Arial Black', Arial, sans-serif;
+    font-family: 'Orbitron', 'Arial Black', Arial, sans-serif;
     font-weight: 900;
     color: #1f1f1f;
     -webkit-transform: translate(-50%, -50%);
@@ -299,7 +311,7 @@
     left: 50%;
     -webkit-transform: translateX(-50%);
     transform: translateX(-50%);
-    font-family: "Georgia", serif;
+    font-family: 'Orbitron', "Georgia", serif;
     letter-spacing: 0.18em;
     color: #222;
     opacity: 0.55;
@@ -321,7 +333,7 @@
     box-shadow:
       0 3vmin 6vmin rgba(0,0,0,0.6),
       inset 0 0.2vmin 0.4vmin rgba(255,255,255,0.06);
-    padding: 1.6%;
+    /* padding set via JS as a fixed px value — see layout() */
   }
 
   #k-clock {
@@ -329,11 +341,50 @@
     width: 100%;
     height: 100%;
     border-radius: 3%;
-    background: #f7f5f0;
+    background:
+      -webkit-radial-gradient(42% 36%, circle, #ded4bf 0%, #cfc3a9 55%, #b8ab8c 100%),
+      -webkit-repeating-linear-gradient(0deg,
+        rgba(255,255,255,0.025) 0px,
+        rgba(255,255,255,0.025) 1px,
+        rgba(0,0,0,0.02) 2px,
+        rgba(0,0,0,0.02) 3px);
+    background:
+      radial-gradient(circle at 42% 36%, #ded4bf 0%, #cfc3a9 55%, #b8ab8c 100%),
+      repeating-linear-gradient(0deg,
+        rgba(255,255,255,0.025) 0px,
+        rgba(255,255,255,0.025) 1px,
+        rgba(0,0,0,0.02) 2px,
+        rgba(0,0,0,0.02) 3px);
     box-shadow:
       inset 0 0 0 0.3vmin rgba(0,0,0,0.55),
-      inset 0 0.3vmin 0.8vmin rgba(0,0,0,0.12);
+      inset 0 0.5vmin 1.4vmin rgba(0,0,0,0.22),
+      inset 0 -0.3vmin 0.8vmin rgba(0,0,0,0.15);
     overflow: hidden;
+  }
+
+  /* Edge vignette for depth — flat solid faces read as artificial */
+  #k-clock::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    border-radius: 3%;
+    background: -webkit-radial-gradient(50% 50%, circle, transparent 55%, rgba(0,0,0,0.18) 100%);
+    background: radial-gradient(circle at 50% 50%, transparent 55%, rgba(0,0,0,0.18) 100%);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* Soft glass sheen — same technique as the Jones face's #j-glass */
+  #k-glass {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    border-radius: 3%;
+    background:
+      -webkit-linear-gradient(135deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.06) 22%, transparent 45%, transparent 75%, rgba(255,255,255,0.05) 100%);
+    background:
+      linear-gradient(135deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0.06) 22%, transparent 45%, transparent 75%, rgba(255,255,255,0.05) 100%);
+    pointer-events: none;
+    z-index: 10;
   }
 
   #k-hands-stage {
@@ -352,24 +403,29 @@
     transform-origin: 50% 100%;
   }
 
-  /* Chunky, blunt (non-tapered) hour hand with a rounded tip */
+  /* Subtle taper, rounded tip and base — the reference's hands are
+     refined and slightly tapered, not a uniform-width block, which is
+     what was reading as crude/arrow-like before */
   #k-hour {
-    width: 4.6%;
+    width: 3.4%;
     height: 24%;
-    margin-left: -2.3%;
+    margin-left: -1.7%;
     margin-top: -24%;
     background: #16130f;
-    border-radius: 1.2vmin 1.2vmin 0.4vmin 0.4vmin;
+    -webkit-clip-path: polygon(50% 0%, 82% 12%, 78% 100%, 22% 100%, 18% 12%);
+    clip-path: polygon(50% 0%, 82% 12%, 78% 100%, 22% 100%, 18% 12%);
+    border-radius: 1.2vmin 1.2vmin 0.6vmin 0.6vmin;
   }
 
-  /* Chunky, blunt (non-tapered) minute hand with a rounded tip */
   #k-minute {
-    width: 3.8%;
+    width: 2.7%;
     height: 35%;
-    margin-left: -1.9%;
+    margin-left: -1.35%;
     margin-top: -35%;
     background: #16130f;
-    border-radius: 1.2vmin 1.2vmin 0.4vmin 0.4vmin;
+    -webkit-clip-path: polygon(50% 0%, 80% 10%, 76% 100%, 24% 100%, 20% 10%);
+    clip-path: polygon(50% 0%, 80% 10%, 76% 100%, 24% 100%, 20% 10%);
+    border-radius: 1vmin 1vmin 0.5vmin 0.5vmin;
   }
 
   /* Thin second hand — understated, matching the plain black/white
@@ -397,14 +453,15 @@
 
   #view-karlsson .number {
     position: absolute;
-    /* Fredoka (Google Fonts) — a close match to the reference's rounded
-       bold numerals. Loaded externally, so it depends on the network and
-       certificate trust working (a separate risk from the GitHub Pages
-       one discussed earlier — Google's cert chain differs and may fare
-       better on iOS 10, but isn't guaranteed). Falls back to bold
-       Verdana automatically if the webfont fails to load. */
-    font-family: 'Fredoka', Verdana, 'Helvetica Neue', Arial, sans-serif;
-    font-weight: 600;
+    /* Google Fonts (Fredoka) has now failed twice despite correct syntax
+       — strong signal this is a certificate-trust issue on this device
+       talking to Google's font domains specifically (same category as
+       the App Store problem, different server), which I can't fix
+       without being able to test on the actual hardware. Chalkboard SE
+       is genuinely built into iOS — no network dependency, no risk of
+       silently failing. */
+    font-family: 'Orbitron', 'Chalkboard SE', Verdana, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: bold;
     color: #16130f;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
@@ -456,6 +513,8 @@
 </style>
 </head>
 <body>
+
+<div id="debug-panel" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:rgba(0,0,0,0.92);color:#0f0;font-family:monospace;font-size:11px;padding:8px;line-height:1.5;max-height:40vh;overflow:auto;white-space:pre-wrap;">Loading debug info…</div>
 <div id="view-jones" class="view">
   <div id="j-case">
     <div id="j-clock">
@@ -470,7 +529,7 @@
         <div id="j-pivot"></div>
       </div>
       <div id="j-glass"></div>
-      <div class="version-tag" id="j-version">v1</div>
+      <div class="version-tag" id="j-version">v4</div>
     </div>
   </div>
 </div>
@@ -486,7 +545,8 @@
         </div>
         <div id="k-pivot"></div>
       </div>
-      <div class="version-tag">v1</div>
+      <div id="k-glass"></div>
+      <div class="version-tag">v4</div>
     </div>
   </div>
 </div>
@@ -667,16 +727,25 @@ var Karlsson = (function () {
     var vw = window.innerWidth;
     var vh = window.innerHeight;
 
-    // Wider landscape ratio than the Jones design (~1.75:1), matching
-    // the reference clock's proportions more closely
-    var caseW = Math.min(vw, vh * 1.75);
-    var caseH = caseW / 1.75;
+    // Same fill logic as the Jones design (proven to fill the iPad
+    // screen edge-to-edge with no letterboxing) — the previous 1.75:1
+    // ratio didn't match the device's actual screen shape, which left
+    // dark bars that combined with the padding to look like one thick
+    // frame and kept the face from filling the screen.
+    var caseW = Math.min(vw, vh * 1.5);
+    var caseH = caseW * (2 / 3);
     if (caseH > vh) {
       caseH = vh;
-      caseW = caseH * 1.75;
+      caseW = caseH * 1.5;
     }
     caseEl.style.width = caseW + 'px';
     caseEl.style.height = caseH + 'px';
+
+    // Thin, fixed-pixel bezel (genuinely iPad-bezel-thin) rather than a
+    // percentage of the case, which scales up and looks thick on a
+    // large, screen-filling case
+    var bezelPx = Math.max(4, Math.min(caseH * 0.012, 10));
+    caseEl.style.padding = bezelPx + 'px';
 
     var clockRect = clock.getBoundingClientRect();
     var dialH = clockRect.height;
@@ -812,6 +881,108 @@ updateAll();
 setInterval(updateAll, 1000);
 
 // Tap the center of the dial to switch between designs
+// ===================== Font-loading diagnostics =====================
+(function fontDebug() {
+  var panel = document.getElementById('debug-panel');
+  var lines = [];
+
+  function log(s) {
+    lines.push(s);
+    panel.textContent = lines.join('\n');
+  }
+
+  log('--- Orbitron font debug ---');
+  log('Page URL: ' + window.location.href);
+  log('Font URL requested: Orbitron-Bold.ttf (relative to page)');
+
+  // 1) Actually fetch the font file directly via XHR — this reveals a
+  // 404 (wrong path), a network/certificate failure, or a genuine
+  // success, independent of whether the browser then chooses to apply it.
+  try {
+    var xhr = new XMLHttpRequest();
+    var fontUrl = 'Orbitron-Bold.ttf';
+    xhr.open('GET', fontUrl, true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) {
+        log('XHR fetch of Orbitron-Bold.ttf: status=' + xhr.status +
+            ', bytes received=' + (xhr.responseText ? xhr.responseText.length : 0));
+        if (xhr.status === 200) {
+          log('  -> File IS reachable at this URL/path.');
+        } else if (xhr.status === 404) {
+          log('  -> 404: file not found at this path. Check it sits next to index.html in the repo, and the filename/case matches exactly.');
+        } else if (xhr.status === 0) {
+          log('  -> status 0: likely blocked by network, CORS, or a certificate/TLS failure.');
+        } else {
+          log('  -> Unexpected status — see above.');
+        }
+      }
+    };
+    xhr.onerror = function () {
+      log('XHR onerror fired — network-level failure fetching the font file.');
+    };
+    xhr.send();
+  } catch (e) {
+    log('XHR threw an exception: ' + e.message);
+  }
+
+  // 2) Rendering-based check: does NOT rely on the modern Font Loading
+  // API (document.fonts), which may not exist on old WebKit — instead
+  // compares rendered text width in the target font vs. a fallback.
+  // If Orbitron is actually applied, the width will differ measurably
+  // from a plain monospace fallback (Orbitron is visually much wider).
+  function widthCheck() {
+    var testStr = 'MMMMMMMMMM0123456789';
+    var a = document.createElement('span');
+    a.style.position = 'absolute';
+    a.style.left = '-9999px';
+    a.style.fontSize = '40px';
+    a.style.fontFamily = 'monospace';
+    a.textContent = testStr;
+
+    var b = document.createElement('span');
+    b.style.position = 'absolute';
+    b.style.left = '-9999px';
+    b.style.fontSize = '40px';
+    b.style.fontFamily = "'Orbitron', monospace";
+    b.textContent = testStr;
+
+    document.body.appendChild(a);
+    document.body.appendChild(b);
+
+    var widthA = a.offsetWidth;
+    var widthB = b.offsetWidth;
+
+    document.body.removeChild(a);
+    document.body.removeChild(b);
+
+    log('Width check — fallback monospace: ' + widthA + 'px, Orbitron-requested: ' + widthB + 'px');
+    if (widthA === widthB) {
+      log('  -> SAME width: Orbitron did NOT apply, still showing fallback.');
+    } else {
+      log('  -> DIFFERENT width: Orbitron DID apply successfully.');
+    }
+  }
+
+  // Run the width check twice — immediately (likely still fallback,
+  // font probably hasn't finished loading yet) and again after a delay
+  // (should reflect the final state once the browser has had time to
+  // load and apply the @font-face, if it's going to at all).
+  widthCheck();
+  setTimeout(function () {
+    log('--- Re-checking after 2s ---');
+    widthCheck();
+  }, 2000);
+
+  // 3) Report whether the modern Font Loading API even exists here —
+  // informative but not relied upon for the actual pass/fail verdict
+  // above, since it may be absent on this old WebKit build.
+  if (window.document && document.fonts) {
+    log('document.fonts API: present.');
+  } else {
+    log('document.fonts API: NOT present on this browser (expected on old iOS — the width check above is the reliable signal).');
+  }
+})();
+
 (function setupToggle() {
   var viewJones = document.getElementById('view-jones');
   var viewKarlsson = document.getElementById('view-karlsson');
